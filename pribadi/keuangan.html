@@ -238,11 +238,16 @@
 
     <div id="tab-ringkasan" style="display:none;">
       <div class="card">
-        <p class="stat-label">Total Pemasukan</p>
-        <p class="stat-value income" id="ringkasanIncome" style="font-size:20px;">Rp0</p>
+        <p class="stat-label">Total Pemasukan (sepanjang waktu)</p>
+        <p class="stat-value income" id="ringkasanIncomeAll" style="font-size:20px;">Rp0</p>
       </div>
       <div class="card">
+        <div class="field" style="margin-bottom:14px;">
+          <label>Lihat bulan</label>
+          <select id="ringkasanMonth"></select>
+        </div>
         <p class="list-title" style="margin-top:0;">Target vs Realisasi Alokasi</p>
+        <p class="hint" id="ringkasanMonthIncome" style="margin-top:-4px;margin-bottom:12px;"></p>
         <div id="allocList"></div>
         <div class="pct-editor">
           <div class="field"><label>Kebutuhan %</label><input type="number" id="tgtKebutuhan" min="0" max="100"></div>
@@ -250,6 +255,7 @@
           <div class="field"><label>Investasi %</label><input type="number" id="tgtInvestasi" min="0" max="100"></div>
         </div>
         <p class="pct-sum" id="tgtSum">Total: 0%</p>
+        <p class="hint">Target berlaku sama untuk semua bulan.</p>
       </div>
     </div>
 
@@ -372,10 +378,11 @@ populateCategorySelect();
 document.getElementById('inDate').valueAsDate = new Date();
 
 // ---------- totals ----------
-function totals(){
+function totals(list){
+  const source = list || transactions;
   let masuk=0, kebutuhan=0, gayahidup=0, investasi=0;
   const investByInstr = {darurat:0, saham:0, reksadana:0, crypto:0};
-  transactions.forEach(t=>{
+  source.forEach(t=>{
     if(t.type==='masuk') masuk += t.amount;
     else if(t.type==='kebutuhan') kebutuhan += t.amount;
     else if(t.type==='gayahidup') gayahidup += t.amount;
@@ -386,6 +393,16 @@ function totals(){
     }
   });
   return {masuk, kebutuhan, gayahidup, investasi, investByInstr};
+}
+
+function monthKey(dateStr){ return dateStr.slice(0,7); } // YYYY-MM
+function monthLabel(key){
+  const d = new Date(key+'-01T00:00:00');
+  return d.toLocaleDateString('id-ID',{month:'long', year:'numeric'});
+}
+function getMonthsList(){
+  const set = new Set(transactions.map(t=>monthKey(t.date)));
+  return [...set].sort().reverse();
 }
 
 // ---------- render: transaksi ----------
@@ -495,8 +512,30 @@ function renderInvestasi(){
 
 // ---------- render: ringkasan ----------
 function renderRingkasan(){
-  const {masuk, kebutuhan, gayahidup, investasi} = totals();
-  document.getElementById('ringkasanIncome').textContent = rupiah(masuk);
+  // total sepanjang waktu (selalu tampil, tidak terpengaruh filter bulan)
+  const allTime = totals();
+  document.getElementById('ringkasanIncomeAll').textContent = rupiah(allTime.masuk);
+
+  // isi dropdown bulan
+  const monthSel = document.getElementById('ringkasanMonth');
+  const months = getMonthsList();
+  const prevValue = monthSel.value;
+  monthSel.innerHTML = '<option value="all">Semua Waktu</option>'
+    + months.map(m=>'<option value="'+m+'">'+monthLabel(m)+'</option>').join('');
+  if(prevValue && (prevValue==='all' || months.includes(prevValue))){
+    monthSel.value = prevValue;
+  } else if(months.length>0){
+    monthSel.value = months[0]; // default: bulan terbaru
+  } else {
+    monthSel.value = 'all';
+  }
+
+  const selected = monthSel.value;
+  const filteredTxns = selected==='all' ? transactions : transactions.filter(t=> monthKey(t.date)===selected);
+  const {masuk, kebutuhan, gayahidup, investasi} = totals(filteredTxns);
+
+  document.getElementById('ringkasanMonthIncome').textContent =
+    (selected==='all' ? 'Pemasukan semua waktu' : 'Pemasukan bulan ini') + ': ' + rupiah(masuk);
 
   const rows = [
     {name:'Kebutuhan', actual: kebutuhan, target: targets.kebutuhan},
@@ -547,6 +586,8 @@ function renderTgtSum(){
     renderRingkasan();
   };
 });
+
+document.getElementById('ringkasanMonth').onchange = renderRingkasan;
 
 // ---------- tabs ----------
 document.querySelectorAll('.tab').forEach(tab=>{
