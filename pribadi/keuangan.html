@@ -286,10 +286,10 @@ const CATS = {
   masuk: ['Gaji','Bisnis','Profit Trading','Lainnya'],
   kebutuhan: ['Makan','Transport','Tagihan','Sewa/Cicilan','Kesehatan','Lainnya'],
   gayahidup: ['Hiburan','Hobi','Belanja','Lainnya'],
-  investasi: ['Dana Darurat','Saham','Reksadana','Crypto']
+  investasi: ['Dana Darurat','Saham','Reksadana','Crypto','Emas','Deposito']
 };
-const INSTR_KEYS = {'Dana Darurat':'darurat','Saham':'saham','Reksadana':'reksadana','Crypto':'crypto'};
-const INSTR_LABELS = {darurat:'Dana Darurat', saham:'Saham', reksadana:'Reksadana', crypto:'Crypto'};
+const INSTR_KEYS = {'Dana Darurat':'darurat','Saham':'saham','Reksadana':'reksadana','Crypto':'crypto','Emas':'emas','Deposito':'deposito'};
+const INSTR_LABELS = {darurat:'Dana Darurat', saham:'Saham', reksadana:'Reksadana', crypto:'Crypto', emas:'Emas', deposito:'Deposito'};
 
 let transactions = [];
 let targets = {kebutuhan:50, gayahidup:30, investasi:20};
@@ -381,7 +381,7 @@ document.getElementById('inDate').valueAsDate = new Date();
 function totals(list){
   const source = list || transactions;
   let masuk=0, kebutuhan=0, gayahidup=0, investasi=0;
-  const investByInstr = {darurat:0, saham:0, reksadana:0, crypto:0};
+  const investByInstr = {darurat:0, saham:0, reksadana:0, crypto:0, emas:0, deposito:0};
   source.forEach(t=>{
     if(t.type==='masuk') masuk += t.amount;
     else if(t.type==='kebutuhan') kebutuhan += t.amount;
