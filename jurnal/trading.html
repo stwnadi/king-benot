@@ -320,10 +320,10 @@ async function loadAccounts(){
       await indexRef.set({accountIds: []});
     }
     accounts = [];
-    for(const id of ids){
-      const accSnap = await db.collection('trading_journal').doc(id).get();
-      if(accSnap.exists) accounts.push({id, ...accSnap.data()});
-    }
+    const snaps = await Promise.all(ids.map(id => db.collection('trading_journal').doc(id).get()));
+    snaps.forEach((accSnap, i) => {
+      if(accSnap.exists) accounts.push({id: ids[i], ...accSnap.data()});
+    });
   }catch(e){
     document.getElementById('saveStatus').textContent = 'Gagal memuat data: ' + e.message;
     document.getElementById('saveStatus').style.color = 'var(--expense)';
