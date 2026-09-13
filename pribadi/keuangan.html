@@ -68,7 +68,7 @@
   .save-status{font-size:11px;margin:-14px 0 18px;min-height:14px;}
 
   .tabs{display:flex;gap:4px;margin-bottom:18px;background:var(--panel);padding:4px;border-radius:10px;border:1px solid var(--line);}
-  .tab{flex:1;text-align:center;padding:10px 4px;border-radius:7px;font-size:11px;letter-spacing:.02em;font-weight:600;cursor:pointer;color:var(--muted);user-select:none;}
+  .tab{flex:1;text-align:center;padding:9px 2px;border-radius:7px;font-size:10px;letter-spacing:.01em;font-weight:600;cursor:pointer;color:var(--muted);user-select:none;}
   .tab.active{background:var(--panel-2);color:var(--gold);}
 
   .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:14px;}
@@ -94,6 +94,8 @@
     font-size:13px;letter-spacing:.05em;font-weight:700;cursor:pointer;margin-top:2px;font-family:inherit;
   }
   button.primary:active{opacity:.85;}
+  button.secondary{width:100%;padding:11px;border:1px solid var(--gold);border-radius:8px;background:transparent;color:var(--gold);font-size:12px;letter-spacing:.03em;font-weight:600;cursor:pointer;margin-top:4px;font-family:inherit;}
+  button.secondary:active{opacity:.8;}
   .err{color:var(--expense);font-size:12px;margin-top:-4px;margin-bottom:8px;display:none;}
   .list-title{font-size:11px;letter-spacing:.07em;text-transform:uppercase;font-weight:600;color:var(--muted);margin:20px 0 10px;}
 
@@ -104,6 +106,7 @@
   .bar.kebutuhan{background:var(--expense);}
   .bar.gayahidup{background:#B58A3E;}
   .bar.investasi{background:var(--invest);}
+  .bar.tabungan{background:var(--gold);}
   .txn-info{flex:1;min-width:0;}
   .txn-cat{font-size:13px;font-weight:600;margin:0;}
   .txn-note{font-size:12px;color:var(--muted);margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -113,6 +116,7 @@
   .txn-amt.kebutuhan{color:var(--expense);}
   .txn-amt.gayahidup{color:#B58A3E;}
   .txn-amt.investasi{color:var(--invest);}
+  .txn-amt.tabungan{color:var(--gold);}
   .del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 4px;line-height:1;}
   .empty{text-align:center;color:var(--muted);font-size:13px;padding:26px 0;}
 
@@ -120,8 +124,8 @@
   .instr-name{font-size:14px;font-weight:600;margin:0 0 10px;}
   .instr-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:5px 0;}
   .instr-row .val{font-size:13px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;}
-  .pct-editor{display:flex;gap:8px;margin-top:16px;}
-  .pct-editor .field{margin-bottom:0;}
+  .pct-editor{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+  .pct-editor .field{margin-bottom:0;flex:1 1 calc(50% - 4px);min-width:100px;}
   .pct-sum{font-size:11px;text-align:right;margin-top:8px;color:var(--muted);}
   .pct-sum.bad{color:var(--expense);font-weight:600;}
 
@@ -164,6 +168,7 @@
   <div class="tabs">
     <div class="tab active" data-tab="transaksi">Transaksi</div>
     <div class="tab" data-tab="investasi">Investasi</div>
+    <div class="tab" data-tab="tabungan">Tabungan</div>
     <div class="tab" data-tab="ringkasan">Ringkasan</div>
   </div>
 
@@ -195,6 +200,7 @@
             <option value="kebutuhan">Kebutuhan</option>
             <option value="gayahidup">Gaya Hidup</option>
             <option value="investasi">Investasi</option>
+            <option value="tabungan">Tabungan</option>
           </select>
         </div>
 
@@ -236,6 +242,15 @@
       <div id="instrumentList"></div>
     </div>
 
+    <div id="tab-tabungan" style="display:none;">
+      <div class="card">
+        <p class="list-label" style="margin:0 0 4px;font-size:11px;color:var(--muted);text-transform:uppercase;">Total Semua Tabungan</p>
+        <p class="stat-value" style="font-size:22px;color:var(--gold);" id="totalTabunganValue">Rp0</p>
+      </div>
+      <div id="savingsList"></div>
+      <button class="secondary" id="btnAddSavings">+ Tambah Tabungan Baru</button>
+    </div>
+
     <div id="tab-ringkasan" style="display:none;">
       <div class="card">
         <p class="stat-label">Total Pemasukan (sepanjang waktu)</p>
@@ -253,6 +268,7 @@
           <div class="field"><label>Kebutuhan %</label><input type="number" id="tgtKebutuhan" min="0" max="100"></div>
           <div class="field"><label>Gaya Hidup %</label><input type="number" id="tgtGayaHidup" min="0" max="100"></div>
           <div class="field"><label>Investasi %</label><input type="number" id="tgtInvestasi" min="0" max="100"></div>
+          <div class="field"><label>Tabungan %</label><input type="number" id="tgtTabungan" min="0" max="100"></div>
         </div>
         <p class="pct-sum" id="tgtSum">Total: 0%</p>
         <p class="hint">Target berlaku sama untuk semua bulan.</p>
@@ -292,7 +308,13 @@ const INSTR_KEYS = {'Dana Darurat':'darurat','Saham':'saham','Reksadana':'reksad
 const INSTR_LABELS = {darurat:'Dana Darurat', saham:'Saham', reksadana:'Reksadana', crypto:'Crypto', emas:'Emas', deposito:'Deposito'};
 
 let transactions = [];
-let targets = {kebutuhan:50, gayahidup:30, investasi:20};
+let targets = {kebutuhan:50, gayahidup:20, investasi:20, tabungan:10};
+let savingsGoals = [
+  {name:'Tabungan Rumah', target:0},
+  {name:'Tabungan Anak', target:0},
+  {name:'Tabungan Pribadi', target:0},
+  {name:'Tabungan Nikah', target:0}
+];
 
 function rupiah(n){
   n = Math.round(n||0);
@@ -336,8 +358,9 @@ async function loadData(){
       const d = snap.data();
       if(d.transactions) transactions = d.transactions;
       if(d.targets) targets = d.targets;
+      if(d.savingsGoals) savingsGoals = d.savingsGoals;
     } else {
-      await docRef.set({transactions:[], targets});
+      await docRef.set({transactions:[], targets, savingsGoals});
     }
   }catch(e){
     document.getElementById('saveStatus').textContent = 'Gagal memuat data: ' + e.message;
@@ -345,6 +368,7 @@ async function loadData(){
   }
   document.getElementById('dataLoading').style.display = 'none';
   document.getElementById('tabsWrap').style.display = 'block';
+  populateCategorySelect();
   renderAll();
 }
 
@@ -356,6 +380,7 @@ async function saveField(field, value){
 }
 function saveTransactions(){ return saveField('transactions', transactions); }
 function saveTargets(){ return saveField('targets', targets); }
+function saveSavingsGoals(){ return saveField('savingsGoals', savingsGoals); }
 
 function showSavedIndicator(ok){
   const el = document.getElementById('saveStatus');
@@ -370,6 +395,11 @@ function populateCategorySelect(){
   const type = document.getElementById('inType').value;
   const sel = document.getElementById('inCategory');
   const label = document.getElementById('catLabel');
+  if(type==='tabungan'){
+    label.textContent = 'Tujuan Tabungan';
+    sel.innerHTML = savingsGoals.map(g=>'<option value="'+escapeHtml(g.name)+'">'+escapeHtml(g.name)+'</option>').join('');
+    return;
+  }
   label.textContent = type==='investasi' ? 'Instrumen' : 'Kategori';
   sel.innerHTML = CATS[type].map(c=>'<option value="'+c+'">'+c+'</option>').join('');
 }
@@ -380,8 +410,9 @@ document.getElementById('inDate').valueAsDate = new Date();
 // ---------- totals ----------
 function totals(list){
   const source = list || transactions;
-  let masuk=0, kebutuhan=0, gayahidup=0, investasi=0;
+  let masuk=0, kebutuhan=0, gayahidup=0, investasi=0, tabungan=0;
   const investByInstr = {darurat:0, saham:0, reksadana:0, crypto:0, emas:0, deposito:0};
+  const tabunganByGoal = {};
   source.forEach(t=>{
     if(t.type==='masuk') masuk += t.amount;
     else if(t.type==='kebutuhan') kebutuhan += t.amount;
@@ -391,8 +422,12 @@ function totals(list){
       const key = INSTR_KEYS[t.category];
       if(key) investByInstr[key] += t.amount;
     }
+    else if(t.type==='tabungan'){
+      tabungan += t.amount;
+      tabunganByGoal[t.category] = (tabunganByGoal[t.category]||0) + t.amount;
+    }
   });
-  return {masuk, kebutuhan, gayahidup, investasi, investByInstr};
+  return {masuk, kebutuhan, gayahidup, investasi, investByInstr, tabungan, tabunganByGoal};
 }
 
 function monthKey(dateStr){ return dateStr.slice(0,7); } // YYYY-MM
@@ -407,8 +442,8 @@ function getMonthsList(){
 
 // ---------- render: transaksi ----------
 function renderSummaryTop(){
-  const {masuk, kebutuhan, gayahidup, investasi} = totals();
-  const keluar = kebutuhan + gayahidup + investasi;
+  const {masuk, kebutuhan, gayahidup, investasi, tabungan} = totals();
+  const keluar = kebutuhan + gayahidup + investasi + tabungan;
   document.getElementById('statIn').textContent = rupiah(masuk);
   document.getElementById('statOut').textContent = rupiah(keluar);
   const sisa = masuk - keluar;
@@ -424,7 +459,7 @@ function renderList(){
     return;
   }
   const sorted = [...transactions].sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
-  const typeLabel = {masuk:'Pemasukan', kebutuhan:'Kebutuhan', gayahidup:'Gaya Hidup', investasi:'Investasi'};
+  const typeLabel = {masuk:'Pemasukan', kebutuhan:'Kebutuhan', gayahidup:'Gaya Hidup', investasi:'Investasi', tabungan:'Tabungan'};
   list.innerHTML = sorted.map(t=>{
     const dateStr = new Date(t.date+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
     const sign = t.type==='masuk' ? '+' : '-';
@@ -489,10 +524,58 @@ document.getElementById('resetLink').onclick = ()=>{
 };
 async function doReset(){
   transactions = [];
-  targets = {kebutuhan:50, gayahidup:30, investasi:20};
-  await docRef.set({transactions, targets});
+  targets = {kebutuhan:50, gayahidup:20, investasi:20, tabungan:10};
+  savingsGoals = [
+    {name:'Tabungan Rumah', target:0},
+    {name:'Tabungan Anak', target:0},
+    {name:'Tabungan Pribadi', target:0},
+    {name:'Tabungan Nikah', target:0}
+  ];
+  await docRef.set({transactions, targets, savingsGoals});
+  populateCategorySelect();
   renderAll();
 }
+
+// ---------- render: tabungan ----------
+function renderSavings(){
+  const {tabunganByGoal} = totals();
+  const list = document.getElementById('savingsList');
+  let grandTotal = 0;
+  list.innerHTML = savingsGoals.map((g,i)=>{
+    const total = tabunganByGoal[g.name] || 0;
+    grandTotal += total;
+    const target = g.target || 0;
+    const pct = target>0 ? Math.min((total/target)*100, 100) : 0;
+    return '<div class="instr-card">'
+      + '<p class="instr-name">'+escapeHtml(g.name)+'</p>'
+      + '<div class="instr-row"><span>Terkumpul</span><span class="val">'+rupiah(total)+'</span></div>'
+      + (target>0 ? (
+          '<div class="instr-row"><span>Target</span><span class="val">'+rupiah(target)+'</span></div>'
+          + '<div style="height:6px;background:var(--panel);border-radius:4px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:'+pct.toFixed(0)+'%;background:var(--gold);"></div></div>'
+          + '<p class="hint" style="text-align:right;margin-top:4px;">'+pct.toFixed(0)+'% tercapai</p>'
+        ) : '')
+      + '<div class="field" style="margin-top:10px;"><label>Ubah Target (Rp, 0 = tanpa target)</label><input type="number" class="goal-target" data-idx="'+i+'" value="'+target+'" min="0"></div>'
+    + '</div>';
+  }).join('');
+  document.getElementById('totalTabunganValue').textContent = rupiah(grandTotal);
+
+  list.querySelectorAll('.goal-target').forEach(inp=>{
+    inp.onchange = ()=>{
+      savingsGoals[Number(inp.getAttribute('data-idx'))].target = Number(inp.value)||0;
+      saveSavingsGoals();
+      renderSavings();
+    };
+  });
+}
+
+document.getElementById('btnAddSavings').onclick = ()=>{
+  const name = window.prompt('Nama tabungan baru (mis. Tabungan Liburan):');
+  if(!name) return;
+  savingsGoals.push({name: name.trim(), target: 0});
+  saveSavingsGoals();
+  populateCategorySelect();
+  renderSavings();
+};
 
 // ---------- render: investasi ----------
 function renderInvestasi(){
@@ -532,7 +615,7 @@ function renderRingkasan(){
 
   const selected = monthSel.value;
   const filteredTxns = selected==='all' ? transactions : transactions.filter(t=> monthKey(t.date)===selected);
-  const {masuk, kebutuhan, gayahidup, investasi} = totals(filteredTxns);
+  const {masuk, kebutuhan, gayahidup, investasi, tabungan} = totals(filteredTxns);
 
   document.getElementById('ringkasanMonthIncome').textContent =
     (selected==='all' ? 'Pemasukan semua waktu' : 'Pemasukan bulan ini') + ': ' + rupiah(masuk);
@@ -540,7 +623,8 @@ function renderRingkasan(){
   const rows = [
     {name:'Kebutuhan', actual: kebutuhan, target: targets.kebutuhan},
     {name:'Gaya Hidup', actual: gayahidup, target: targets.gayahidup},
-    {name:'Investasi', actual: investasi, target: targets.investasi}
+    {name:'Investasi', actual: investasi, target: targets.investasi},
+    {name:'Tabungan', actual: tabungan, target: targets.tabungan}
   ];
   const list = document.getElementById('allocList');
   list.innerHTML = rows.map(r=>{
@@ -550,7 +634,7 @@ function renderRingkasan(){
     const circumference = 226.19;
     const dashoffset = circumference * (1 - clampedPct/100);
     const targetRotation = 180 + (r.target/100*360);
-    const ringColor = (overTarget && r.name!=='Investasi') ? 'var(--expense)' : 'var(--gold)';
+    const ringColor = (overTarget && r.name!=='Investasi' && r.name!=='Tabungan') ? 'var(--expense)' : 'var(--gold)';
     return '<div style="text-align:center;">'
       + '<svg width="86" height="86" viewBox="0 0 86 86">'
         + '<circle cx="43" cy="43" r="36" fill="none" stroke="var(--panel-2)" stroke-width="8"/>'
@@ -567,19 +651,20 @@ function renderRingkasan(){
   document.getElementById('tgtKebutuhan').value = targets.kebutuhan;
   document.getElementById('tgtGayaHidup').value = targets.gayahidup;
   document.getElementById('tgtInvestasi').value = targets.investasi;
+  document.getElementById('tgtTabungan').value = targets.tabungan;
   renderTgtSum();
 }
 
 function renderTgtSum(){
-  const sum = targets.kebutuhan + targets.gayahidup + targets.investasi;
+  const sum = targets.kebutuhan + targets.gayahidup + targets.investasi + targets.tabungan;
   const el = document.getElementById('tgtSum');
   el.textContent = 'Total: '+sum+'%';
   el.className = 'pct-sum' + (sum!==100 ? ' bad' : '');
   if(sum!==100) el.textContent += ' (harus 100%)';
 }
 
-['tgtKebutuhan','tgtGayaHidup','tgtInvestasi'].forEach((id, i)=>{
-  const map = ['kebutuhan','gayahidup','investasi'];
+['tgtKebutuhan','tgtGayaHidup','tgtInvestasi','tgtTabungan'].forEach((id, i)=>{
+  const map = ['kebutuhan','gayahidup','investasi','tabungan'];
   document.getElementById(id).oninput = (e)=>{
     targets[map[i]] = Number(e.target.value)||0;
     saveTargets();
@@ -597,6 +682,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
     const target = tab.getAttribute('data-tab');
     document.getElementById('tab-transaksi').style.display = target==='transaksi' ? 'block' : 'none';
     document.getElementById('tab-investasi').style.display = target==='investasi' ? 'block' : 'none';
+    document.getElementById('tab-tabungan').style.display = target==='tabungan' ? 'block' : 'none';
     document.getElementById('tab-ringkasan').style.display = target==='ringkasan' ? 'block' : 'none';
   };
 });
@@ -605,6 +691,7 @@ function renderAll(){
   renderSummaryTop();
   renderList();
   renderInvestasi();
+  renderSavings();
   renderRingkasan();
 }
 </script>
