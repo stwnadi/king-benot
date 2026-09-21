@@ -70,6 +70,9 @@
   button.primary{width:100%;padding:12px;border:none;border-radius:8px;background:var(--gold);color:#15130C;font-size:13px;letter-spacing:.05em;font-weight:700;cursor:pointer;font-family:inherit;}
   button.secondary{width:100%;padding:11px;border:1px solid var(--gold);border-radius:8px;background:transparent;color:var(--gold);font-size:12px;letter-spacing:.03em;font-weight:600;cursor:pointer;font-family:inherit;}
   .err{color:var(--expense);font-size:12px;margin-top:-4px;margin-bottom:8px;display:none;}
+  .checklist{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
+  .chk-row{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ink);padding:6px 0;cursor:pointer;}
+  .chk-row input{width:16px;height:16px;flex-shrink:0;accent-color:var(--gold);}
   .list-title{font-size:11px;letter-spacing:.07em;text-transform:uppercase;font-weight:600;color:var(--muted);margin:20px 0 10px;}
 
   .entry{padding:12px 0;border-bottom:1px solid var(--line);}
@@ -187,6 +190,18 @@
           <div class="field"><label>Tanggal</label><input type="date" id="inDate"></div>
           <div class="field"><label>Alasan</label><input type="text" id="inAlasan" placeholder="mis. breakout + retest H1"></div>
           <div class="field"><label>Link Screenshot (opsional)</label><input type="url" id="inScreenshot" placeholder="https://..."></div>
+
+          <div class="checklist">
+            <p class="list-title" style="margin:0 0 10px;">Checklist Sebelum Entry</p>
+            <label class="chk-row"><input type="checkbox" class="chk-item" value="bias"> Bias arah jelas (H1/H4 searah entry)</label>
+            <label class="chk-row"><input type="checkbox" class="chk-item" value="level"> Level jelas (S/R atau zona penting)</label>
+            <label class="chk-row"><input type="checkbox" class="chk-item" value="sltp"> SL &amp; TP sudah ditentukan</label>
+            <label class="chk-row"><input type="checkbox" class="chk-item" value="news"> Tidak ada berita high-impact dekat</label>
+            <label class="chk-row"><input type="checkbox" class="chk-item" value="calm"> Kepala tenang (bukan revenge/FOMO)</label>
+            <label class="chk-row"><input type="checkbox" class="chk-item" value="plan"> Setup sesuai plan</label>
+          </div>
+          <p class="err" id="checklistErr">Centang semua checklist dulu sebelum tambah entri.</p>
+
           <p class="err" id="formErr">Isi jumlah profit/rugi dulu.</p>
           <button class="primary" id="btnAddEntry">Tambah entri</button>
         </div>
@@ -436,6 +451,11 @@ document.getElementById('btnAddEntry').onclick = async ()=>{
   const amtInput = document.getElementById('inAmount');
   const amt = Number(amtInput.value);
   const errEl = document.getElementById('formErr');
+  const checklistErrEl = document.getElementById('checklistErr');
+  const checkboxes = document.querySelectorAll('.chk-item');
+  const allChecked = Array.from(checkboxes).every(c => c.checked);
+  if(!allChecked){ checklistErrEl.style.display='block'; errEl.style.display='none'; return; }
+  checklistErrEl.style.display = 'none';
   if(!amt || amt<=0){ errEl.style.display='block'; return; }
   errEl.style.display = 'none';
   const signedAmt = currentPL==='profit' ? amt : -amt;
@@ -459,6 +479,7 @@ document.getElementById('btnAddEntry').onclick = async ()=>{
   document.getElementById('inLot').value = '';
   document.getElementById('inAlasan').value = '';
   document.getElementById('inScreenshot').value = '';
+  checkboxes.forEach(c => c.checked = false);
   await loadEntries(currentAccountId);
   renderEntries();
 };
